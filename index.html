@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEO / GEO Анализ — accor.ru</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0f0d;
+    --surface: #161713;
+    --surface2: #1e1f1b;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8e6df;
+    --muted: #7a7870;
+    --accent: #c8f55a;
+    --accent2: #f5a623;
+    --accent3: #5af5c8;
+    --red: #f55a5a;
+    --amber: #f5c85a;
+    --green: #5af59a;
+    --blue: #5ab4f5;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 40px 48px 32px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,245,90,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-meta { color: var(--muted); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; }
+  .header-title { font-family: var(--font-display); font-size: 42px; font-weight: 600; line-height: 1.1; color: var(--text); margin-bottom: 8px; }
+  .header-title span { color: var(--accent); font-style: italic; }
+  .header-sub { color: var(--muted); font-size: 12px; }
+  .header-url { color: var(--accent3); text-decoration: none; border-bottom: 1px solid rgba(90,245,200,0.3); }
+
+  /* ── Layout ── */
+  .main { padding: 32px 48px 64px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+  .section { margin-bottom: 40px; }
+  .section-label {
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    transition: border-color .2s;
+  }
+  .card:hover { border-color: var(--border2); }
+  .card-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 8px; }
+  .card-value { font-family: var(--font-display); font-size: 38px; font-weight: 600; line-height: 1; }
+  .card-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Score card ── */
+  .score-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .score-name { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .score-row { display: flex; align-items: center; gap: 10px; }
+  .score-num { font-family: var(--font-display); font-size: 22px; font-weight: 600; min-width: 36px; }
+  .bar-track { flex: 1; height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+  .score-badge { font-size: 10px; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+  .badge-red    { background: rgba(245,90,90,.15);   color: var(--red);   border: 1px solid rgba(245,90,90,.25); }
+  .badge-amber  { background: rgba(245,200,90,.15);  color: var(--amber); border: 1px solid rgba(245,200,90,.25); }
+  .badge-green  { background: rgba(90,245,154,.15);  color: var(--green); border: 1px solid rgba(90,245,154,.25); }
+
+  /* ── Overall score ── */
+  .overall {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .overall-num { font-family: var(--font-display); font-size: 72px; font-weight: 600; color: var(--accent2); line-height: 1; }
+  .overall-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .overall-desc { font-size: 12px; color: var(--text); margin-top: 4px; max-width: 280px; }
+
+  /* ── Issue list ── */
+  .issue-list { display: flex; flex-direction: column; gap: 8px; }
+  .issue {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px; border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 12px; line-height: 1.5;
+  }
+  .issue-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; margin-top: 1px; }
+  .issue-red    { background: rgba(245,90,90,.1);  border-color: rgba(245,90,90,.2); }
+  .issue-amber  { background: rgba(245,200,90,.1); border-color: rgba(245,200,90,.2); }
+  .issue-green  { background: rgba(90,245,154,.1); border-color: rgba(90,245,154,.2); }
+  .icon-red     { background: rgba(245,90,90,.2);  color: var(--red); }
+  .icon-amber   { background: rgba(245,200,90,.2); color: var(--amber); }
+  .icon-green   { background: rgba(90,245,154,.2); color: var(--green); }
+  .issue-title  { font-weight: 500; color: var(--text); }
+  .issue-desc   { color: var(--muted); font-size: 11px; }
+
+  /* ── Schema table ── */
+  .schema-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .schema-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; border-radius: 7px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    background: var(--surface2);
+  }
+  .schema-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-red   { background: var(--red); }
+  .dot-amber { background: var(--amber); }
+  .dot-green { background: var(--green); }
+  .schema-name { color: var(--text); flex: 1; }
+  .schema-page { color: var(--muted); font-size: 10px; }
+
+  /* ── Geo table ── */
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { text-align: left; color: var(--muted); font-weight: 400; padding: 6px 10px; border-bottom: 1px solid var(--border); letter-spacing: 0.06em; text-transform: uppercase; font-size: 10px; }
+  td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── Priority matrix ── */
+  .priority-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .priority-col { border-radius: 10px; padding: 16px; border: 1px solid var(--border); }
+  .priority-header { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .priority-red    { border-top: 2px solid var(--red); }
+  .priority-amber  { border-top: 2px solid var(--amber); }
+  .priority-yellow { border-top: 2px solid #c8f55a; }
+  .priority-item { font-size: 11px; color: var(--text); padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; gap: 6px; }
+  .priority-item:last-child { border-bottom: none; }
+  .priority-num { color: var(--muted); width: 16px; flex-shrink: 0; }
+
+  /* ── Radar chart placeholder ── */
+  .radar-wrap { position: relative; width: 100%; }
+
+  /* ── Tab nav ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    border: 1px solid var(--border); color: var(--muted);
+    background: transparent; transition: all .15s;
+  }
+  .tab:hover { color: var(--text); border-color: var(--border2); }
+  .tab.active { background: var(--accent); color: #0e0f0d; border-color: var(--accent); font-weight: 500; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Trend tags ── */
+  .trend-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .trend-tag { padding: 4px 12px; border-radius: 20px; font-size: 11px; border: 1px solid; }
+  .trend-hot  { border-color: rgba(245,90,90,.4);   color: var(--red);   background: rgba(245,90,90,.08); }
+  .trend-warm { border-color: rgba(245,200,90,.4);  color: var(--amber); background: rgba(245,200,90,.08); }
+  .trend-cool { border-color: rgba(90,180,245,.4);  color: var(--blue);  background: rgba(90,180,245,.08); }
+
+  /* ── Footer ── */
+  .footer { padding: 20px 48px; border-top: 1px solid var(--border); color: var(--muted); font-size: 10px; letter-spacing: 0.08em; display: flex; justify-content: space-between; }
+
+  @media (max-width: 900px) {
+    .header, .main, .footer { padding-left: 20px; padding-right: 20px; }
+    .grid-2, .grid-3, .grid-4, .priority-grid, .schema-grid { grid-template-columns: 1fr; }
+    .col-span-2, .col-span-3 { grid-column: span 1; }
+    .header-title { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="header">
+  <div class="header-meta">AEO / GEO Анализ · Апрель 2026 · Туризм / Гостиничный бизнес</div>
+  <div class="header-title">accor<span>.ru</span></div>
+  <div class="header-sub">
+    <a href="https://accor.ru" target="_blank" class="header-url">https://accor.ru</a>
+    &nbsp;·&nbsp; Официальный сайт гостиничной сети Accor в России
+    &nbsp;·&nbsp; 50+ отелей · 24 города
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <!-- ── Общие метрики ── -->
+  <div class="section">
+    <div class="section-label">Ключевые показатели</div>
+    <div class="grid-4" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="card-label">Отелей в сети</div>
+        <div class="card-value" style="color:var(--accent);">50+</div>
+        <div class="card-sub">в 24 городах России</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Статей в блоге</div>
+        <div class="card-value" style="color:var(--accent3);">100+</div>
+        <div class="card-sub">20 страниц пагинации</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Языки сайта</div>
+        <div class="card-value" style="color:var(--accent2);">2</div>
+        <div class="card-sub">RU / EN версии</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Schema-типов</div>
+        <div class="card-value" style="color:var(--red);">0</div>
+        <div class="card-sub">JSON-LD не обнаружен</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Общий GEO-балл + скоры ── -->
+  <div class="section">
+    <div class="section-label">Оценки по категориям</div>
+    <div class="grid-2">
+
+      <div class="overall">
+        <div class="overall-num">4.9</div>
+        <div>
+          <div class="overall-label">Общий GEO-балл</div>
+          <div class="overall-desc">Сайт имеет сильный контент, но критически слаб по structured data и AI-цитируемости</div>
+        </div>
+      </div>
+
+      <div class="card" style="display:flex; flex-direction:column; gap:10px; padding:16px 20px;">
+        <div class="score-card">
+          <div class="score-name">Технический SEO</div>
+          <div class="score-row">
+            <div class="score-num" style="color:var(--amber);">6.0</div>
+            <div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--amber);"></div></div>
+            <span class="score-badge badge-amber">Доработка</span>
+          </div>
+        </div>
+        <div class="score-card">
+          <div class="score-name">On-Page / Семантика</div>
+          <div class="score-row">
+            <div class="score-num" style="color:var(--amber);">6.0</div>
+            <div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--amber);"></div></div>
+            <span class="score-badge badge-amber">Доработка</span>
+          </div>
+        </div>
+        <div class="score-card">
+          <div class="score-name">Structured Data</div>
+          <div class="score-row">
+            <div class="score-num" style="color:var(--red);">2.0</div>
+            <div class="bar-track"><div class="bar-fill" style="width:20%;background:var(--red);"></div></div>
+            <span class="score-badge badge-red">Критично</span>
+          </div>
+        </div>
+        <div class="score-card">
+          <div class="score-name">AEO-готовность</div>
+          <div class="score-row">
+            <div class="score-num" style="color:var(--red);">3.0</div>
+            <div class="bar-track"><div class="bar-fill" style="width:30%;background:var(--red);"></div></div>
+            <span class="score-badge badge-red">Критично</span>
+          </div>
+        </div>
+        <div class="score-card">
+          <div class="score-name">GEO / AI-цитируемость</div>
+          <div class="score-row">
+            <div class="score-num" style="color:var(--red);">4.0</div>
+            <div class="bar-track"><div class="bar-fill" style="width:40%;background:var(--red);"></div></div>
+            <span class="score-badge badge-red">Низкая</span>
+          </div>
+        </div>
+        <div class="score-card">
+          <div class="score-name">Локальное SEO / Гео-покрытие</div>
+          <div class="score-row">
+            <div class="score-num" style="color:var(--amber);">6.0</div>
+            <div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--amber);"></div></div>
+            <span class="score-badge badge-amber">Доработка</span>
+          </div>
+        </div>
+        <div class="score-card">
+          <div class="score-name">Контент-маркетинг</div>
+          <div class="score-row">
+            <div class="score-num" style="color:var(--green);">7.0</div>
+            <div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--green);"></div></div>
+            <span class="score-badge badge-green">Хорошо</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Детальный разбор по табам ── -->
+  <div class="section">
+    <div class="section-label">Детальный анализ</div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('structured')">Structured Data</button>
+      <button class="tab" onclick="showTab('aeo')">AEO</button>
+      <button class="tab" onclick="showTab('geo')">GEO / AI</button>
+      <button class="tab" onclick="showTab('local')">Локальное SEO</button>
+      <button class="tab" onclick="showTab('content')">Контент</button>
+      <button class="tab" onclick="showTab('eeat')">E-E-A-T</button>
+    </div>
+
+    <!-- Structured Data -->
+    <div class="tab-content active" id="tab-structured">
+      <div class="grid-2">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Schema-типы: статус внедрения</div>
+          <div class="schema-grid">
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">Organization</div><div class="schema-page">Главная, /about/</div></div></div>
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">LodgingBusiness</div><div class="schema-page">Страницы отелей</div></div></div>
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">AggregateRating</div><div class="schema-page">Отели (рейтинги есть!)</div></div></div>
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">Offer / PriceSpec</div><div class="schema-page">Отели (цены есть!)</div></div></div>
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">LocalBusiness</div><div class="schema-page">Гео-страницы городов</div></div></div>
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">BlogPosting</div><div class="schema-page">Статьи блога</div></div></div>
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">FAQPage</div><div class="schema-page">Отели, блог</div></div></div>
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">BreadcrumbList</div><div class="schema-page">Все страницы</div></div></div>
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">SearchAction</div><div class="schema-page">Главная (Sitelinks)</div></div></div>
+            <div class="schema-item"><div class="schema-dot dot-red"></div><div><div class="schema-name">LoyaltyProgram</div><div class="schema-page">/loyalty-program/</div></div></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Упущенные rich results</div>
+          <div class="issue-list">
+            <div class="issue issue-red">
+              <div class="issue-icon icon-red">!</div>
+              <div><div class="issue-title">Рейтинги отелей (9.0–9.4) не в Schema</div><div class="issue-desc">Данные присутствуют в HTML, но не завёрнуты в AggregateRating — Google не показывает звёзды в SERP</div></div>
+            </div>
+            <div class="issue issue-red">
+              <div class="issue-icon icon-red">!</div>
+              <div><div class="issue-title">Цены от 5 500 руб. не в Schema</div><div class="issue-desc">Offer/PriceSpecification отсутствует — упущены price snippets в поиске</div></div>
+            </div>
+            <div class="issue issue-red">
+              <div class="issue-icon icon-red">!</div>
+              <div><div class="issue-title">llms.txt отсутствует</div><div class="issue-desc">AI-краулеры не получают явных инструкций о приоритетном контенте</div></div>
+            </div>
+            <div class="issue issue-amber">
+              <div class="issue-icon icon-amber">!</div>
+              <div><div class="issue-title">Breadcrumbs в HTML, не в Schema</div><div class="issue-desc">Визуальные breadcrumbs есть, но BreadcrumbList JSON-LD отсутствует</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AEO -->
+    <div class="tab-content" id="tab-aeo">
+      <div class="grid-2">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Факторы AEO</div>
+          <div class="issue-list">
+            <div class="issue issue-green">
+              <div class="issue-icon icon-green">✓</div>
+              <div><div class="issue-title">Числовые факты в контенте</div><div class="issue-desc">Цены, рейтинги, количество отелей — хорошо для featured snippets</div></div>
+            </div>
+            <div class="issue issue-green">
+              <div class="issue-icon icon-green">✓</div>
+              <div><div class="issue-title">Определения трендов в блоге</div><div class="issue-desc">Bleisure, сет-джеттинг, bedrotting — уникальные определения с высоким потенциалом цитирования</div></div>
+            </div>
+            <div class="issue issue-amber">
+              <div class="issue-icon icon-amber">!</div>
+              <div><div class="issue-title">H2/H3 не в вопросительной форме</div><div class="issue-desc">Заголовки типа «Цифровой детокс» вместо «Что такое цифровой детокс?» — упущен featured snippet</div></div>
+            </div>
+            <div class="issue issue-red">
+              <div class="issue-icon icon-red">!</div>
+              <div><div class="issue-title">FAQ-блоки отсутствуют</div><div class="issue-desc">Ни на одной странице нет структурированных Q&A блоков с FAQPage Schema</div></div>
+            </div>
+            <div class="issue issue-red">
+              <div class="issue-icon icon-red">!</div>
+              <div><div class="issue-title">Нет speakable разметки</div><div class="issue-desc">Голосовые ассистенты не знают, какие блоки зачитывать вслух</div></div>
+            </div>
+            <div class="issue issue-red">
+              <div class="issue-icon icon-red">!</div>
+              <div><div class="issue-title">JS-шаблоны в HTML</div><div class="issue-desc">{{ text }} и {{filteredOptions.length}} в исходнике — краулеры могут получить неполный контент</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Потенциал Featured Snippets</div>
+          <table>
+            <thead><tr><th>Запрос</th><th>Страница</th><th>Потенциал</th></tr></thead>
+            <tbody>
+              <tr><td>отели Accor в Москве</td><td>/moscow/</td><td style="color:var(--green);">● Высокий</td></tr>
+              <tr><td>что такое bleisure</td><td>/blog/bleisure...</td><td style="color:var(--green);">● Высокий</td></tr>
+              <tr><td>медленные путешествия</td><td>/blog/medlennye...</td><td style="color:var(--green);">● Высокий</td></tr>
+              <tr><td>программа лояльности Accor</td><td>/loyalty-program/</td><td style="color:var(--amber);">● Средний</td></tr>
+              <tr><td>отели в Красной Поляне</td><td>/krasnaya-polyana/</td><td style="color:var(--amber);">● Средний</td></tr>
+              <tr><td>бронирование отелей Accor</td><td>Главная</td><td style="color:var(--red);">● Низкий</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- GEO -->
+    <div class="tab-content" id="tab-geo">
+      <div class="grid-2">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Passage-Level Citability</div>
+          <table>
+            <thead><tr><th>Страница / Контент</th><th>Цитируемость</th><th>Причина</th></tr></thead>
+            <tbody>
+              <tr><td>/about/ — факты о компании</td><td style="color:var(--green);">● Высокая</td><td style="color:var(--muted);">Конкретные верифицируемые данные</td></tr>
+              <tr><td>Блог — определения трендов</td><td style="color:var(--green);">● Высокая</td><td style="color:var(--muted);">Уникальные термины + объяснения</td></tr>
+              <tr><td>Гео-страницы + цены</td><td style="color:var(--amber);">● Средняя</td><td style="color:var(--muted);">Факты есть, Schema нет</td></tr>
+              <tr><td>/loyalty-program/</td><td style="color:var(--amber);">● Средняя</td><td style="color:var(--muted);">Описание есть, нет Q&A структуры</td></tr>
+              <tr><td>Главная страница</td><td style="color:var(--red);">● Низкая</td><td style="color:var(--muted);">JS-шаблоны, нет структур. текста</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:16px; font-size:12px;color:var(--muted);margin-bottom:8px;">AI Crawler Accessibility</div>
+          <div class="issue-list">
+            <div class="issue issue-amber"><div class="issue-icon icon-amber">?</div><div><div class="issue-title">GPTBot, ClaudeBot, PerplexityBot</div><div class="issue-desc">Статус в robots.txt не подтверждён — требует срочной проверки</div></div></div>
+            <div class="issue issue-green"><div class="issue-icon icon-green">✓</div><div><div class="issue-title">YandexBot</div><div class="issue-desc">Вероятно разрешён — Yandex.Metrica подключена</div></div></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Brand Mention Signals</div>
+          <div class="issue-list">
+            <div class="issue issue-green"><div class="issue-icon icon-green">✓</div><div><div class="issue-title">Бренд «Accor» / «Аккор»</div><div class="issue-desc">Системно упоминается на всех страницах</div></div></div>
+            <div class="issue issue-green"><div class="issue-icon icon-green">✓</div><div><div class="issue-title">Суббренды</div><div class="issue-desc">Mercure, ibis, Novotel, Mövenpick, Swissôtel, Adagio — представлены</div></div></div>
+            <div class="issue issue-green"><div class="issue-icon icon-green">✓</div><div><div class="issue-title">Корпоративные факты</div><div class="issue-desc">Основана 1967, штаб-квартира во Франции, 110 стран, 5600 отелей</div></div></div>
+            <div class="issue issue-red"><div class="issue-icon icon-red">!</div><div><div class="issue-title">llms.txt отсутствует</div><div class="issue-desc">Нет явного управления AI-индексацией. Создать /llms.txt и /llms-full.txt</div></div></div>
+            <div class="issue issue-amber"><div class="issue-icon icon-amber">?</div><div><div class="issue-title">Wikipedia / Wikidata</div><div class="issue-desc">Статус страницы о российской сети не проверен</div></div></div>
+            <div class="issue issue-amber"><div class="issue-icon icon-amber">!</div><div><div class="issue-title">Внешние упоминания</div><div class="issue-desc">Необходимы публикации в отраслевых СМИ со ссылками на accor.ru</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Local SEO -->
+    <div class="tab-content" id="tab-local">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Покрытие гео-страниц и блога по городам</div>
+      <table>
+        <thead><tr><th>Город</th><th>Отелей</th><th>Гео-страница</th><th>Блог-статьи</th><th>Schema</th><th>FAQ</th><th>Карта</th></tr></thead>
+        <tbody>
+          <tr><td>Москва</td><td>19</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓ несколько</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td>Санкт-Петербург</td><td>2</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td>Красная Поляна</td><td>6</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td>Сочи</td><td>3</td><td style="color:var(--green);">✓</td><td style="color:var(--amber);">⚠ косвенно</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td>Екатеринбург</td><td>1</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td>Владивосток</td><td>1</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td>Архангельск</td><td>1</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td>Тюмень</td><td>1</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td>Калининград</td><td>2</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td style="color:var(--muted);">14 других городов</td><td style="color:var(--muted);">1–2</td><td style="color:var(--green);">✓</td><td style="color:var(--red);">✗ большинство</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:14px;font-size:11px;color:var(--muted);">
+        Гео-страницы есть для всех 24 городов — хорошая основа. Критический gap: отсутствие Schema, FAQ и текстового описания города на всех гео-страницах.
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="tab-content" id="tab-content">
+      <div class="grid-2">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Топ-темы блога по GEO-потенциалу</div>
+          <div class="trend-wrap" style="margin-bottom:16px;">
+            <span class="trend-tag trend-hot">Bleisure-путешествия</span>
+            <span class="trend-tag trend-hot">Сет-джеттинг</span>
+            <span class="trend-tag trend-hot">Bedrotting-туризм</span>
+            <span class="trend-tag trend-warm">Медленные путешествия</span>
+            <span class="trend-tag trend-warm">Гастротуризм</span>
+            <span class="trend-tag trend-warm">Цифровой детокс</span>
+            <span class="trend-tag trend-cool">Горнолыжные курорты</span>
+            <span class="trend-tag trend-cool">СПА-отели Москвы</span>
+            <span class="trend-tag trend-cool">Зимний Байкал</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Метрики публикаций</div>
+          <div class="issue-list">
+            <div class="issue issue-green"><div class="issue-icon icon-green">✓</div><div><div class="issue-title">Частота: несколько статей в неделю</div><div class="issue-desc">Февраль 2026 — активная публикация</div></div></div>
+            <div class="issue issue-green"><div class="issue-icon icon-green">✓</div><div><div class="issue-title">Глубина: 5–8 мин чтения</div><div class="issue-desc">Достаточный объём для индексации и цитирования</div></div></div>
+            <div class="issue issue-green"><div class="issue-icon icon-green">✓</div><div><div class="issue-title">Актуальность: тренды 2025–2026</div><div class="issue-desc">Контент отвечает на текущие поисковые запросы</div></div></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Проблемы контент-стратегии</div>
+          <div class="issue-list">
+            <div class="issue issue-red"><div class="issue-icon icon-red">!</div><div><div class="issue-title">Нет авторства</div><div class="issue-desc">Статьи без имени автора — снижает E-E-A-T и доверие AI-движков</div></div></div>
+            <div class="issue issue-red"><div class="issue-icon icon-red">!</div><div><div class="issue-title">Нет FAQ в конце статей</div><div class="issue-desc">Каждая статья упускает возможность FAQ-snippet</div></div></div>
+            <div class="issue issue-amber"><div class="issue-icon icon-amber">!</div><div><div class="issue-title">Нет внешних ссылок-источников</div><div class="issue-desc">Статьи не ссылаются на авторитетные данные — слабый E-E-A-T</div></div></div>
+            <div class="issue issue-amber"><div class="issue-icon icon-amber">!</div><div><div class="issue-title">Нет тематических хабов</div><div class="issue-desc">Нет агрегирующих страниц «СПА-отели России», «Горнолыжные отели»</div></div></div>
+            <div class="issue issue-amber"><div class="issue-icon icon-amber">!</div><div><div class="issue-title">Нет видео-контента</div><div class="issue-desc">Отсутствует VideoObject Schema — упущен Google Video carousel</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- E-E-A-T -->
+    <div class="tab-content" id="tab-eeat">
+      <div class="grid-2">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">E-E-A-T сигналы</div>
+          <table>
+            <thead><tr><th>Сигнал</th><th>Статус</th></tr></thead>
+            <tbody>
+              <tr><td>Авторы с биографиями</td><td style="color:var(--red);">✗ Отсутствуют</td></tr>
+              <tr><td>Экспертные цитаты</td><td style="color:var(--red);">✗ Отсутствуют</td></tr>
+              <tr><td>Дата публикации</td><td style="color:var(--green);">✓ Есть</td></tr>
+              <tr><td>Дата обновления</td><td style="color:var(--red);">✗ Отсутствует</td></tr>
+              <tr><td>Контактная информация</td><td style="color:var(--amber);">⚠ Только /contacts/</td></tr>
+              <tr><td>Юридическая информация</td><td style="color:var(--green);">✓ /legal-information/</td></tr>
+              <tr><td>Политика конфиденциальности</td><td style="color:var(--green);">✓ Есть</td></tr>
+              <tr><td>Международный бренд-бэкграунд</td><td style="color:var(--green);">✓ /about/</td></tr>
+              <tr><td>Текстовые отзывы гостей</td><td style="color:var(--red);">✗ Только цифры</td></tr>
+              <tr><td>Review Schema</td><td style="color:var(--red);">✗ Отсутствует</td></tr>
+              <tr><td>Упоминания в СМИ</td><td style="color:var(--amber);">? Не проверено</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Конкурентный контекст AI-выдачи</div>
+          <table>
+            <thead><tr><th>Конкурент</th><th>Schema</th><th>GEO-сила</th></tr></thead>
+            <tbody>
+              <tr><td>Booking.com</td><td style="color:var(--green);">✓ Сильная</td><td style="color:var(--green);">Лидер</td></tr>
+              <tr><td>Яндекс.Путешествия</td><td style="color:var(--green);">✓ Сильная</td><td style="color:var(--green);">Лидер (Нейро)</td></tr>
+              <tr><td>Ostrovok.ru</td><td style="color:var(--amber);">⚠ Частичная</td><td style="color:var(--amber);">Средняя</td></tr>
+              <tr><td>accor.ru</td><td style="color:var(--red);">✗ Отсутствует</td><td style="color:var(--red);">Низкая</td></tr>
+              <tr><td>marriott.ru</td><td style="color:var(--amber);">⚠ Частичная</td><td style="color:var(--amber);">Средняя</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.7;">
+            Для победы над агрегаторами в AI-ответах необходим упор на <strong style="color:var(--text);">уникальный first-party контент</strong>, экспертизу и полную Schema-разметку.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Приоритеты ── -->
+  <div class="section">
+    <div class="section-label">План приоритетов</div>
+    <div class="priority-grid">
+      <div class="priority-col priority-red">
+        <div class="priority-header" style="color:var(--red);">🔴 Критично · 1–4 недели</div>
+        <div class="priority-item"><span class="priority-num">1</span>Внедрить JSON-LD Schema на все типы страниц</div>
+        <div class="priority-item"><span class="priority-num">2</span>Создать /llms.txt и /llms-full.txt</div>
+        <div class="priority-item"><span class="priority-num">3</span>Исправить hreflang для RU/EN версий</div>
+        <div class="priority-item"><span class="priority-num">4</span>Верифицировать robots.txt — открыть AI-краулеры</div>
+      </div>
+      <div class="priority-col priority-amber">
+        <div class="priority-header" style="color:var(--amber);">🟠 Высокий · 1–2 месяца</div>
+        <div class="priority-item"><span class="priority-num">5</span>FAQPage блоки на статьях и страницах отелей</div>
+        <div class="priority-item"><span class="priority-num">6</span>Обновить Title главной страницы</div>
+        <div class="priority-item"><span class="priority-num">7</span>Добавить авторство в блог</div>
+        <div class="priority-item"><span class="priority-num">8</span>Расширить гео-страницы (текст + карта + FAQ)</div>
+        <div class="priority-item"><span class="priority-num">9</span>Семантические имена изображений + alt-тексты</div>
+      </div>
+      <div class="priority-col priority-yellow">
+        <div class="priority-header" style="color:var(--accent);">🟡 Средний · 2–4 месяца</div>
+        <div class="priority-item"><span class="priority-num">10</span>speakable разметка для ключевых блоков</div>
+        <div class="priority-item"><span class="priority-num">11</span>Тематические хабы-страницы (СПА, горные, бизнес)</div>
+        <div class="priority-item"><span class="priority-num">12</span>Текстовые отзывы гостей + Review Schema</div>
+        <div class="priority-item"><span class="priority-num">13</span>Обновление Wikipedia / Wikidata</div>
+        <div class="priority-item"><span class="priority-num">14</span>Внешние публикации в отраслевых СМИ</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <span>AEO / GEO Report · accor.ru · Апрель 2026</span>
+  <span>Анализ на основе открытых данных сайта</span>
+</footer>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
